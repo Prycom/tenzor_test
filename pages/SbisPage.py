@@ -3,7 +3,8 @@ from locators.SbisLocators import SbisLocators
 from selenium.webdriver import ActionChains
 import time
 import allure
-
+import os
+from config import DOWNLOAD_PATH
 
 class SbisPage(BasePage):
 
@@ -27,7 +28,7 @@ class SbisPage(BasePage):
         partners = self.find_elements(SbisLocators.LOCATOR_PARTNER)
         return [partner.text for partner in partners]
     
-    @allure.step('Меняем свою текущую локацию')
+    @allure.step('Меняем свою текущую локацию на Камчатский край')
     def change_location(self):
         loc_changer = self.get_clickable_element(SbisLocators.LOCATOR_GEO)
         loc_changer.click()
@@ -63,7 +64,18 @@ class SbisPage(BasePage):
     def download_web_installer(self):
         download = self.get_clickable_element(SbisLocators.LOCATOR_DOWNLOAD_INSTALLER, time=30)
         download.click()
-    
-    @allure.step("Получаем размер файла Веб-установщика")
-    def get_installer_size(self):
-        pass
+        return download
+
+    @allure.step("Ждём, пока файл установщика скачается в заданную директорию")
+    def wait_until_downloaded(self):
+        downloaded = False
+        
+        while(not downloaded):
+            if not downloaded:
+                time.sleep(2)
+            for filename in os.listdir(DOWNLOAD_PATH):
+                if filename.endswith('.crdownload'):
+                    downloaded = False
+                else:
+                    downloaded = True
+                

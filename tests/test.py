@@ -5,23 +5,15 @@ from selenium.webdriver.chrome.options import Options
 from pages.TensorPage import TensorPage
 from pages.SbisPage import SbisPage
 import allure
+from config import CHROME_PREFS, DOWNLOAD_PATH
+import os
 
 @pytest.fixture()
 def driver():
     opts = webdriver.ChromeOptions()
-    #opts.add_argument("--no-sandbox")
-    #opts.add_argument("--disable-dev-shm-usage")
-    #opts.add_argument("--disable-blink-features=AutomationControlled")
-    #opts.add_argument("--disable-notifications")
-    opts.enable_downloads = True
-    opts.add_experimental_option("prefs", {
-        "download.default_directory": r"C:\Users\downloads",
-        "download.prompt_for_download": False,
-        "download.directory_upgrade": True,
-        "safebrowsing.enabled": False
-    })
+    opts.add_argument("headless")
+    opts.add_experimental_option("prefs", CHROME_PREFS)
     driver = webdriver.Chrome(options=opts)
-    driver.maximize_window()
     
     yield driver
     
@@ -33,6 +25,7 @@ class Tests():
     @allure.title("Тест 1")
     @allure.severity("critical")
     def test_1(self, driver):
+        
         sbis_page = SbisPage(driver)
         sbis_page.go_to_site()
         assert "СБИС" in driver.title
@@ -58,6 +51,7 @@ class Tests():
     @allure.title("Тест 2")
     @allure.severity("critical")
     def test_2(self, driver):
+        
         sbis_page = SbisPage(driver)
         sbis_page.go_to_site()
         assert "СБИС" in driver.title
@@ -79,6 +73,7 @@ class Tests():
     @allure.title("Тест 3")
     @allure.severity("minor")
     def test_3(self, driver):
+        
         sbis_page = SbisPage(driver)
         sbis_page.go_to_site()
         assert "СБИС" in driver.title
@@ -93,9 +88,20 @@ class Tests():
         sbis_page.click_sbis_plugin()
         assert "tab=plugin" in driver.current_url
 
-        sbis_page.download_web_installer()
-
-        sleep(20)
+        # Получвем размер Веб-установщика
+        installer_size = sbis_page.download_web_installer().text.split()[2]
+        installer_size = float(installer_size)
+        
+        sbis_page.wait_until_downloaded()
+        
+        # Получаем размер скачанного файла
+        downloaded_size = os.stat(DOWNLOAD_PATH+'sbisplugin-setup-web.exe').st_size / (1024 * 1024)
+        
+        assert abs(downloaded_size - installer_size) < 0.001
+        
+        
+        
+        
 
 
 
